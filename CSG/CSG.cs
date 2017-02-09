@@ -23,9 +23,95 @@ namespace Parabox.CSG
 	 * Base class for CSG operations.  Contains GameObject level methods for Subtraction, Intersection, and Union operations.
 	 * The GameObjects passed to these functions will not be modified.
 	 */
+	public enum CSG_Operation {
+		no_op,
+		Union,
+		Intersect,
+		Subtract,
+	};
+
+	public class CSG_Tree
+	{
+		public CSG_Tree left;
+		public CSG_Tree right;
+		private CSG_Operation operation;
+		private CSG_Node current_object;
+		
+
+		//for leaf nodes
+		public CSG_Tree(GameObject obj){
+			operation = CSG_Operation.no_op;
+			CSG_Model csg_model_a = new CSG_Model(obj);
+			current_object = new CSG_Node( csg_model_a.ToPolygons());
+			left = null;
+			right = null;
+		}
+
+		public CSG_Tree(CSG_Tree lhs, CSG_Tree rhs, CSG_Operation op){
+			left = lhs;
+			right = rhs;
+			operation = op;
+			current_object = null;
+
+		}
+
+		public Mesh getMesh(){
+			CSG_Model result = new CSG_Model(current_object.AllPolygons());
+			return result.ToMesh();
+		}
+		public void render(){
+			if(operation == CSG_Operation.no_op){
+			} else {
+				switch (operation){
+					case CSG_Operation.Union:
+						current_object = new CSG_Node(CSG_Node.Union(left.render_tree(), 
+									right.render_tree()).AllPolygons());
+						break;
+					case CSG_Operation.Intersect:
+						current_object = new CSG_Node(CSG_Node.Intersect(left.render_tree(), 
+									right.render_tree()).AllPolygons());
+						break;
+					case CSG_Operation.Subtract:
+						current_object = new CSG_Node(CSG_Node.Subtract(left.render_tree(), 
+									right.render_tree()).AllPolygons());
+						break;
+				}
+		
+			}
+			
+		} 
+
+		internal CSG_Node render_tree(){
+			if(operation == CSG_Operation.no_op){
+				return current_object;
+			} else {
+				switch (operation){
+					case CSG_Operation.Union:
+						current_object = new CSG_Node(CSG_Node.Union(left.render_tree(), 
+									right.render_tree()).AllPolygons());
+						return current_object;
+					case CSG_Operation.Intersect:
+						current_object = new CSG_Node(CSG_Node.Intersect(left.render_tree(), 
+									right.render_tree()).AllPolygons());
+						return current_object;
+					case CSG_Operation.Subtract:
+						current_object = new CSG_Node(CSG_Node.Subtract(left.render_tree(), 
+									right.render_tree()).AllPolygons());
+						return current_object;
+				}
+		
+			}
+			return null;
+			
+		} 
+
+
+	}
+
+
 	public class CSG
 	{
-		public const float EPSILON = 0.00001f; ///< Tolerance used by `splitPolygon()` to decide if a point is on the plane.
+		public const float EPSILON = 0.00001f; /// Tolerance used by `splitPolygon()` to decide if a point is on the plane.
 
 		/**
 		 * Returns a new mesh by merging @lhs with @rhs.
