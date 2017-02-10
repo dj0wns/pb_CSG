@@ -12,7 +12,7 @@ This fork of pb_CSG adds a CSG Binary Tree to remove problems of converting to a
 ##Example use:
 
 To build this shape:
-![](https://en.wikipedia.org/wiki/Constructive_solid_geometry#/media/File:Csg_tree.png)
+![](Images/CSG_Tree_Example_1_wiki.png)
 
 	// Include the library
 	using Parabox.CSG;
