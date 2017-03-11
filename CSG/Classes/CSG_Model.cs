@@ -39,6 +39,26 @@ namespace Parabox.CSG
 
 			indices = new List<int>(m.triangles);
 		}
+		
+		public CSG_Model(Mesh m)
+		{
+			vertices = new List<CSG_Vertex>();
+
+			int vertexCount = m.vertexCount;
+			
+			Vector3[] v = m.vertices;
+			Vector3[] n = m.normals;
+			Vector2[] u = m.uv;
+			Color[] c = m.colors;
+
+			for(int i = 0; i < v.Length; i++)
+				vertices.Add( new CSG_Vertex(v[i], n[i], u == null 
+							? Vector2.zero : u[i], c == null 
+							|| c.Length != vertexCount 
+							? Color.white : c[i]) );
+
+			indices = new List<int>(m.triangles);
+		}
 
 		public CSG_Model(List<CSG_Polygon> list)
 		{

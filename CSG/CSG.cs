@@ -46,6 +46,14 @@ namespace Parabox.CSG
 			left = null;
 			right = null;
 		}
+		
+		public CSG_Tree(Mesh m){
+			operation = CSG_Operation.no_op;
+			CSG_Model csg_model_a = new CSG_Model(m);
+			current_object = new CSG_Node( csg_model_a.ToPolygons());
+			left = null;
+			right = null;
+		}
 
 		public CSG_Tree(CSG_Tree lhs, CSG_Tree rhs, CSG_Operation op){
 			left = lhs;
@@ -57,28 +65,11 @@ namespace Parabox.CSG
 
 		public Mesh getMesh(){
 			CSG_Model result = new CSG_Model(current_object.AllPolygons());
+			Debug.Log(result.vertices.Count);
 			return result.ToMesh();
 		}
 		public void render(){
-			if(operation == CSG_Operation.no_op){
-			} else {
-				switch (operation){
-					case CSG_Operation.Union:
-						current_object = new CSG_Node(CSG_Node.Union(left.render_tree(), 
-									right.render_tree()).AllPolygons());
-						break;
-					case CSG_Operation.Intersect:
-						current_object = new CSG_Node(CSG_Node.Intersect(left.render_tree(), 
-									right.render_tree()).AllPolygons());
-						break;
-					case CSG_Operation.Subtract:
-						current_object = new CSG_Node(CSG_Node.Subtract(left.render_tree(), 
-									right.render_tree()).AllPolygons());
-						break;
-				}
-		
-			}
-			
+			current_object = render_tree();
 		} 
 
 		internal CSG_Node render_tree(){
@@ -87,16 +78,16 @@ namespace Parabox.CSG
 			} else {
 				switch (operation){
 					case CSG_Operation.Union:
-						current_object = new CSG_Node(CSG_Node.Union(left.render_tree(), 
-									right.render_tree()).AllPolygons());
+						current_object = CSG_Node.Union(left.render_tree(), 
+									right.render_tree());
 						return current_object;
 					case CSG_Operation.Intersect:
-						current_object = new CSG_Node(CSG_Node.Intersect(left.render_tree(), 
-									right.render_tree()).AllPolygons());
+						current_object = CSG_Node.Intersect(left.render_tree(), 
+									right.render_tree());
 						return current_object;
 					case CSG_Operation.Subtract:
-						current_object = new CSG_Node(CSG_Node.Subtract(left.render_tree(), 
-									right.render_tree()).AllPolygons());
+						current_object = CSG_Node.Subtract(left.render_tree(), 
+									right.render_tree());
 						return current_object;
 				}
 		

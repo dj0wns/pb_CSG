@@ -12,7 +12,7 @@ public class Demo : MonoBehaviour
 	GameObject composite, composite_normal,  temp;
 	bool wireframe = false;
 
-	Vector3 origin = new Vector3(-0.5f, -1f, -4.5f);
+	Vector3 origin = new Vector3(0.0f, 0f, 0.0f);
 	Vector3 regionSize = new Vector3(5f,5f,5f);
 
 	List<GameObject> objects; //keep track of objects created
@@ -26,7 +26,66 @@ public class Demo : MonoBehaviour
 
 	void Awake()
 	{
-		CSG_Tree_Test();
+	//	Mesh_Generator_Test();
+		CSG_Tree_Test_With_Mesh_Gen();
+	}
+
+	void Mesh_Generator_Test(){
+		composite= new GameObject();
+		composite.transform.position = origin;
+		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
+		composite.AddComponent<MeshFilter>().sharedMesh = 
+			MeshGenerator.generate_cube(origin.x, origin.y, origin.z, 
+				0.3f*regionSize.x, 0.3f*regionSize.y, 0.3f*regionSize.z).ToMesh();
+	}
+	
+	void CSG_Tree_Test_With_Mesh_Gen(){
+		
+		GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+		GameObject cyl1 = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+		GameObject cyl2 = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+		GameObject cyl3 = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+		
+		//rotations
+		cyl2.transform.Rotate(90, 90, 0);
+		cyl3.transform.Rotate(0, 90, 90);
+
+		//sizing
+		sphere.transform.localScale = Vector3.one * 2.1f;
+		cyl1.transform.localScale = Vector3.one * 1f;
+		cyl2.transform.localScale = Vector3.one * 1f;
+		cyl3.transform.localScale = Vector3.one * 1f;
+		
+		//create leaf nodes
+		CSG_Tree sphere_leaf = new CSG_Tree(sphere);
+		CSG_Tree cube_leaf = new CSG_Tree(
+				MeshGenerator.generate_cube(origin.x, origin.y, origin.z, 
+				1.5f, 1.5f, 1.5f).ToMesh());
+		CSG_Tree cyl1_leaf = new CSG_Tree(cyl1);
+		CSG_Tree cyl2_leaf = new CSG_Tree(cyl2);
+		CSG_Tree cyl3_leaf = new CSG_Tree(cyl3);
+
+		//construct tree
+		CSG_Tree cube_intersect_sphere = new CSG_Tree(cube_leaf, sphere_leaf, CSG_Operation.Intersect);
+		CSG_Tree cyl1_union_cyl2 = new CSG_Tree(cyl1_leaf, cyl2_leaf, CSG_Operation.Union);
+		CSG_Tree cyl3_union_cyl1_2 = new CSG_Tree(cyl3_leaf, cyl1_union_cyl2, CSG_Operation.Union);
+		CSG_Tree CIS_subtract_cyls = new CSG_Tree(cube_intersect_sphere, cyl3_union_cyl1_2, CSG_Operation.Subtract);
+		//render tree
+		CIS_subtract_cyls.render();
+ 
+		//create new game object from result
+  		composite= new GameObject();
+  		composite.transform.position = origin;
+		composite.AddComponent<MeshFilter>().sharedMesh = CIS_subtract_cyls.getMesh();
+	  	composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
+		
+
+ 	 	//remove primitives
+		Destroy(sphere);
+		Destroy(cyl1);
+		Destroy(cyl2);
+		Destroy(cyl3);
+
 	}
 
 	void CSG_Tree_Test(){
