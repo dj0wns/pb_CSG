@@ -26,8 +26,16 @@ public class Demo : MonoBehaviour
 
 	void Awake()
 	{
+		//Silo_Test();
 		Mesh_Generator_Test();
-		CSG_Tree_Test_With_Mesh_Gen();
+		//CSG_Tree_Test_With_Mesh_Gen();
+	}
+	
+	void Silo_Test(){
+		SiloData sd = SiloReader.ReadFile("/home/dj0wns/Documents/College/Senior_Year/Thesis/silo-practice/csg.fake");
+		SiloReader.PrintStructure(sd);
+
+
 	}
 
 	void Mesh_Generator_Test(){
@@ -69,6 +77,7 @@ public class Demo : MonoBehaviour
 
 	}
 	
+
 	void CSG_Tree_Test_With_Mesh_Gen(){
 		
 		//create leaf nodes
