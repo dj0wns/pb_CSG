@@ -26,44 +26,67 @@ public class Demo : MonoBehaviour
 
 	void Awake()
 	{
-	//	Mesh_Generator_Test();
+		Mesh_Generator_Test();
 		CSG_Tree_Test_With_Mesh_Gen();
 	}
 
 	void Mesh_Generator_Test(){
+		objects = new List<GameObject>();
 		composite= new GameObject();
 		composite.transform.position = origin;
 		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
 		composite.AddComponent<MeshFilter>().sharedMesh = 
-			MeshGenerator.generate_cube(origin.x, origin.y, origin.z, 
-				0.3f*regionSize.x, 0.3f*regionSize.y, 0.3f*regionSize.z).ToMesh();
+			MeshGenerator.generate_cube(origin.x+8, origin.y, origin.z, 
+				1.4f, 1.4f, 1.4f).ToMesh();
+
+		objects.Add(composite);
+		
+		composite= new GameObject();
+		composite.transform.position = origin;
+		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
+		composite.AddComponent<MeshFilter>().sharedMesh = 
+		MeshGenerator.generate_sphere(origin.x+6, origin.y, origin.z, 1.0f, 5).ToMesh();
+		
+		objects.Add(composite);
+
+		composite = new GameObject();
+		composite.transform.position = origin;
+		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
+		composite.AddComponent<MeshFilter>().sharedMesh = 
+		MeshGenerator.generate_axis_alligned_cylinder(origin.x+4, origin.y, origin.z, 
+				0.8f, 2.0f, MeshGenerator.Axis.Y_AXIS,  3).ToMesh();
+		
+		objects.Add(composite);
+		
+		composite = new GameObject();
+		composite.transform.position = origin;
+		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
+		composite.AddComponent<MeshFilter>().sharedMesh = 
+		MeshGenerator.generate_axis_alligned_cone(origin.x+2, origin.y, origin.z, 
+				0.8f, 2.0f, MeshGenerator.Axis.Y_AXIS,  3).ToMesh();
+		
+		objects.Add(composite);
+
 	}
 	
 	void CSG_Tree_Test_With_Mesh_Gen(){
 		
-		GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-		GameObject cyl1 = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-		GameObject cyl2 = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-		GameObject cyl3 = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-		
-		//rotations
-		cyl2.transform.Rotate(90, 90, 0);
-		cyl3.transform.Rotate(0, 90, 90);
-
-		//sizing
-		sphere.transform.localScale = Vector3.one * 2.1f;
-		cyl1.transform.localScale = Vector3.one * 1f;
-		cyl2.transform.localScale = Vector3.one * 1f;
-		cyl3.transform.localScale = Vector3.one * 1f;
-		
 		//create leaf nodes
-		CSG_Tree sphere_leaf = new CSG_Tree(sphere);
+		CSG_Tree sphere_leaf = new CSG_Tree(
+				MeshGenerator.generate_sphere(origin.x, origin.y, origin.z, 
+					1.0f, 5).ToMesh());
 		CSG_Tree cube_leaf = new CSG_Tree(
 				MeshGenerator.generate_cube(origin.x, origin.y, origin.z, 
-				1.5f, 1.5f, 1.5f).ToMesh());
-		CSG_Tree cyl1_leaf = new CSG_Tree(cyl1);
-		CSG_Tree cyl2_leaf = new CSG_Tree(cyl2);
-		CSG_Tree cyl3_leaf = new CSG_Tree(cyl3);
+				1.4f, 1.4f, 1.4f).ToMesh());
+		CSG_Tree cyl1_leaf = new CSG_Tree(
+		MeshGenerator.generate_axis_alligned_cylinder(origin.x, origin.y, origin.z, 
+				0.5f, 2.0f, MeshGenerator.Axis.X_AXIS,  2).ToMesh());
+		CSG_Tree cyl2_leaf = new CSG_Tree(
+		MeshGenerator.generate_axis_alligned_cylinder(origin.x, origin.y, origin.z, 
+				0.5f, 2.0f, MeshGenerator.Axis.Y_AXIS,  2).ToMesh());
+		CSG_Tree cyl3_leaf = new CSG_Tree(
+		MeshGenerator.generate_axis_alligned_cylinder(origin.x, origin.y, origin.z, 
+				0.5f, 2.0f, MeshGenerator.Axis.Z_AXIS,  2).ToMesh());
 
 		//construct tree
 		CSG_Tree cube_intersect_sphere = new CSG_Tree(cube_leaf, sphere_leaf, CSG_Operation.Intersect);
@@ -72,20 +95,13 @@ public class Demo : MonoBehaviour
 		CSG_Tree CIS_subtract_cyls = new CSG_Tree(cube_intersect_sphere, cyl3_union_cyl1_2, CSG_Operation.Subtract);
 		//render tree
 		CIS_subtract_cyls.render();
- 
+
 		//create new game object from result
   		composite= new GameObject();
   		composite.transform.position = origin;
 		composite.AddComponent<MeshFilter>().sharedMesh = CIS_subtract_cyls.getMesh();
 	  	composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
-		
-
- 	 	//remove primitives
-		Destroy(sphere);
-		Destroy(cyl1);
-		Destroy(cyl2);
-		Destroy(cyl3);
-
+	
 	}
 
 	void CSG_Tree_Test(){
