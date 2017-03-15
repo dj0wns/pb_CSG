@@ -1,12 +1,12 @@
 # pb_CSG
 
-A fork of Evan W's port of [CSG.js](http://evanw.github.io/csg.js/) for the Unity Game engine with a more efficient and correct interface.
+A fork of Karl's port of [CSG.js](http://evanw.github.io/csg.js/) for the Unity Game engine with a more efficient and correct interface.
 
 ## Description of Changes
 
 This fork of pb_CSG adds a CSG Binary Tree to remove problems of converting to and from GameObjects for complex shapes (In the original code, objects with more than one Subtraction operation would lose their volume and become flat). Moreover this provides a more efficient workflow to creating complex shapes.
 
-
+Moreover, this fork adds the ability to procedurally generate a variety of shapes. Currently this includes: Box, Sphere, Cylinder, Cone, and Circle/Square/Octagon. 
 
 
 ##Example use:
