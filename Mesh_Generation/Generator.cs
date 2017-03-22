@@ -18,6 +18,7 @@ public class MeshNode
 	public MeshNode (Vector3 position, Vector3 normal, Vector2 uv){
 		this.position = position;
 		this.normal = normal;
+		this.normal.Normalize();
 		this.uv = uv;
 		vertexNumber = -1;
 		edges = new List<MeshNode>();
@@ -349,8 +350,8 @@ public class MeshGenerator
 			}
 		}
 	}
-	//a0 a1 or a2 must be 0
-	private static MeshNode generate_square(float x, float y, float z, float width, Axis axis, Vector3 center, float uvMult){
+	
+	public static MeshNode generate_square(float x, float y, float z, float width, Axis axis, Vector3 center, float uvMult){
 		Vector3 v0, v1, v2, v3;
 		//center point
 		Vector3 v4 = new Vector3(x,y,z);

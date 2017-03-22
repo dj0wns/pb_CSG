@@ -26,45 +26,54 @@ public class Demo : MonoBehaviour
 
 	void Awake()
 	{
-		//Silo_Test();
-		Mesh_Generator_Test();
-		CSG_Tree_Test();
+		objects = new List<GameObject>();
+		Silo_Test();
+		//Mesh_Generator_Test();
+		//CSG_Tree_Test();
 	}
 	
 	void Silo_Test(){
-		SiloData sd = SiloReader.ReadFile("");
-		SiloReader.PrintStructure(sd);
+		SiloData sd = SiloReader.ReadFile("/home/dj0wns/Documents/College/Senior_Year/Thesis/silo-practice/csg.fake");
+	//	SiloReader.PrintStructure(sd);
+		List<CSG_Tree> csgtree = SiloReader.GenerateTree(sd);
+		for(int i = 0; i < csgtree.Count; i++){
+			csgtree[i].render();
 
+			//create new game object from result
+  			composite= new GameObject();
+  			composite.transform.position = origin;
+			composite.AddComponent<MeshFilter>().sharedMesh = csgtree[i].getMesh();
+	  		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_blue;
+			objects.Add(composite);
+		}
 
 	}
 
 	void Mesh_Generator_Test(){
-		objects = new List<GameObject>();
 		composite= new GameObject();
 		composite.transform.position = origin;
 		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
 		composite.AddComponent<MeshFilter>().sharedMesh = 
 			MeshGenerator.generate_cube(origin.x+8, origin.y, origin.z, 
 				1.4f, 1.4f, 1.4f).ToMesh();
-
+		
 		objects.Add(composite);
 		
 		composite= new GameObject();
 		composite.transform.position = origin;
 		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
 		composite.AddComponent<MeshFilter>().sharedMesh = 
-		MeshGenerator.generate_sphere(origin.x+6, origin.y, origin.z, 1.0f, 5).ToMesh();
-		
+		MeshGenerator.generate_sphere(origin.x+6, origin.y, origin.z, 1.0f, 10).ToMesh();
 		objects.Add(composite);
 
-	  composite = new GameObject();
-	  composite.transform.position = origin;
-	  composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
-	  composite.AddComponent<MeshFilter>().sharedMesh = 
-	  MeshGenerator.generate_axis_alligned_cylinder(origin.x+4, origin.y, origin.z, 
+	  	composite = new GameObject();
+	  	composite.transform.position = origin;
+	 	composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_green;
+	 	composite.AddComponent<MeshFilter>().sharedMesh = 
+		MeshGenerator.generate_axis_alligned_cylinder(origin.x+4, origin.y, origin.z, 
 	  		0.8f, 2.0f, MeshGenerator.Axis.Y_AXIS,  3).ToMesh();
 	  
-	  objects.Add(composite);
+	 	objects.Add(composite);
 	  
 		composite = new GameObject();
 		composite.transform.position = origin;

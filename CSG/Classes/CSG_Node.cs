@@ -189,6 +189,26 @@ namespace Parabox.CSG
 		}
 
 #region STATIC OPERATIONS
+		
+		// Do nothing because inner is the default representation of an object
+		public static CSG_Node Inner(CSG_Node a1)
+		{
+			return a1.Clone();
+		}
+
+		// Invert the object - inner is the default representation of an object
+		public static CSG_Node Outer(CSG_Node a1)
+		{
+			CSG_Node a = a1.Clone();
+			a.Invert();
+			return a;
+		}
+
+		// TODO : I dont understand what on does
+		public static CSG_Node On(CSG_Node a1)
+		{
+			return a1.Clone();
+		}
 
 		// Return a new CSG solid representing space in either this solid or in the
 		// solid `csg`. Neither this solid nor the solid `csg` are modified.

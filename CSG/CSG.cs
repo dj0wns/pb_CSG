@@ -25,6 +25,9 @@ namespace Parabox.CSG
 	 */
 	public enum CSG_Operation {
 		no_op,
+		Inner,
+		Outer,
+		On,
 		Union,
 		Intersect,
 		Subtract,
@@ -77,14 +80,28 @@ namespace Parabox.CSG
 				return current_object;
 			} else {
 				switch (operation){
+					case CSG_Operation.Inner:
+						current_object = CSG_Node.Inner(left.render_tree());
+						return current_object;
+					
+					case CSG_Operation.Outer:
+						current_object = CSG_Node.Outer(left.render_tree());
+						return current_object;
+					
+					case CSG_Operation.On:
+						current_object = CSG_Node.On(left.render_tree());
+						return current_object;
+					
 					case CSG_Operation.Union:
 						current_object = CSG_Node.Union(left.render_tree(), 
 									right.render_tree());
 						return current_object;
+					
 					case CSG_Operation.Intersect:
 						current_object = CSG_Node.Intersect(left.render_tree(), 
 									right.render_tree());
 						return current_object;
+					
 					case CSG_Operation.Subtract:
 						current_object = CSG_Node.Subtract(left.render_tree(), 
 									right.render_tree());

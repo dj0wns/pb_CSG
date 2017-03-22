@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using System.IO;
- 
+using Parabox.CSG; 
 
 public class region {
 	public string typeflag;
@@ -79,6 +79,181 @@ public class SiloReader
 		reader.Close();
 		return sd;
 	}
+
+	public static List<CSG_Tree> GenerateTree(SiloData sd){
+		List<CSG_Tree> csgtree = new List<CSG_Tree>();
+		List<CSG_Tree> nodetree = new List<CSG_Tree>();
+		List<CSG_Tree> rendertree = new List<CSG_Tree>();
+		Debug.Log(sd.Types.Count);
+		//build nodes
+		for(int i =0 ; i < sd.Types.Count; i++){
+			switch(sd.Types[i].type.ToLower()){
+				case "quadric":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "sphere":
+					{
+					//	GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        			//	sphere.transform.position = new Vector3(
+					//			sd.Types[i].coefficients[0],
+					//			sd.Types[i].coefficients[1],
+					//			sd.Types[i].coefficients[2]);
+
+					//	sphere.transform.localScale = new Vector3(
+					//			sd.Types[i].coefficients[3],
+					//			sd.Types[i].coefficients[3],
+					//			sd.Types[i].coefficients[3]);
+					//	csgtree.Add(new CSG_Tree(sphere));
+						//Destroy(sphere);
+					}
+					csgtree.Add(new CSG_Tree(MeshGenerator.generate_sphere(
+									sd.Types[i].coefficients[0], 
+									sd.Types[i].coefficients[1], 
+									sd.Types[i].coefficients[2],
+									sd.Types[i].coefficients[3],0).ToMesh()));
+					break;
+				case "ellipsoid":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "plane_g":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "plane_x":
+					csgtree.Add(new CSG_Tree(MeshGenerator.generate_square(
+									sd.Types[i].coefficients[0], 
+									0, 0, 100, MeshGenerator.Axis.X_AXIS, 
+									new Vector3(0,0,0), 1).ToMesh())); 
+					break;
+				case "plane_y":
+					csgtree.Add(new CSG_Tree(MeshGenerator.generate_square(
+									0, sd.Types[i].coefficients[0], 
+									0, 100, MeshGenerator.Axis.Y_AXIS, 
+									new Vector3(0,0,0), 1).ToMesh())); 
+					break;
+				case "plane_z":
+					csgtree.Add(new CSG_Tree(MeshGenerator.generate_square(
+									0, 0,sd.Types[i].coefficients[0], 
+									100, MeshGenerator.Axis.Z_AXIS, 
+									new Vector3(0,0,0), 1).ToMesh())); 
+					break;
+				case "plane_pn":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "plane_ppp":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "cylinder_pnlr":
+					{
+						MeshGenerator.Axis axis;
+						//TODO : Assumes cylinder is axis aligned, will fail if not
+						if(sd.Types[i].coefficients[3] != 0){	
+							axis = MeshGenerator.Axis.X_AXIS;
+						} else if(sd.Types[i].coefficients[4] != 0){
+							axis = MeshGenerator.Axis.Y_AXIS;
+						} else if(sd.Types[i].coefficients[5] != 0){
+							axis = MeshGenerator.Axis.Z_AXIS;
+						} else {
+							axis = MeshGenerator.Axis.X_AXIS;
+						}
+						csgtree.Add(new CSG_Tree(
+									MeshGenerator.generate_axis_alligned_cylinder(
+										sd.Types[i].coefficients[0],
+										sd.Types[i].coefficients[1],
+										sd.Types[i].coefficients[2],
+										sd.Types[i].coefficients[7],
+										sd.Types[i].coefficients[6],
+										axis, 2).ToMesh()));
+
+					}
+					break;
+				case "cylinder_ppr":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "box":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "cone_pnla":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "cone_ppa":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "polyhedron":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "hex":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "tet":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "pyramid":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+				case "prism":
+					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					break;
+			}
+
+
+		}
+		//construct tree
+		Debug.Log(csgtree.Count);
+		for(int i = 0 ; i < sd.Regions.Count; i++){
+				switch(sd.Regions[i].typeflag.ToLower()){
+					case "inner":
+						nodetree.Add(new CSG_Tree (csgtree[sd.Regions[i].leftID],
+									csgtree[sd.Regions[i].leftID], 
+								CSG_Operation.Inner));
+						break;
+					case "outer":
+						nodetree.Add(new CSG_Tree (csgtree[sd.Regions[i].leftID], 
+									csgtree[sd.Regions[i].leftID], 
+								CSG_Operation.Outer));
+						break;
+					case "on":
+						nodetree.Add(new CSG_Tree (csgtree[sd.Regions[i].leftID], 
+									csgtree[sd.Regions[i].leftID], 
+								CSG_Operation.On));
+						break;
+					case "union":
+						nodetree.Add(new CSG_Tree(
+								nodetree[sd.Regions[i].leftID], 
+								nodetree[sd.Regions[i].rightID], 
+								CSG_Operation.Union));
+						break;
+					case "intersect":
+						nodetree.Add(new CSG_Tree(
+								nodetree[sd.Regions[i].leftID], 
+								nodetree[sd.Regions[i].rightID], 
+								CSG_Operation.Intersect));
+						break;
+					case "diff":
+						nodetree.Add(new CSG_Tree(
+								nodetree[sd.Regions[i].leftID], 
+								nodetree[sd.Regions[i].rightID], 
+								CSG_Operation.Subtract));
+						break;
+					case "compliment":
+						Debug.Log(sd.Regions[i].typeflag + " - Not Implemented");
+						break;
+					case "xform":
+						Debug.Log(sd.Regions[i].typeflag + " - Not Implemented");
+						break;
+					case "sweep":
+						Debug.Log(sd.Regions[i].typeflag + " - Not Implemented");
+						break;
+				}
+		}
+		//extract render objects
+		Debug.Log(nodetree.Count);
+		for(int i = 0; i < sd.Zones.Count; i++){
+			rendertree.Add(nodetree[sd.Zones[i]]);
+		}
+
+		return rendertree;
+	}
+
 	public static Type ReadType(StreamReader reader){
 		Type t = new Type();
 		t.type = reader.ReadLine();
