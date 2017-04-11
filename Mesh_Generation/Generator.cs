@@ -110,8 +110,8 @@ public class MeshNode
 		result.uv = uvs.ToArray();
 		result.triangles = triangles.ToArray();
 		
-		Debug.Log(vertices.Count);
-		Debug.Log(triangles.Count);
+		Debug.Log("Tris: " + triangles.Count/3.0);
+		Debug.Log("Verts: " + vertices.Count);
 
 		return result;
 	}
@@ -351,6 +351,38 @@ public class MeshGenerator
 		}
 	}
 	
+	public static MeshNode generate_arbitrary_quad(Vector3 v0, Vector3 v1, 
+			Vector3 v2, Vector3 v3, Vector3 center, float uvMult){
+		
+		MeshNode n0 = new MeshNode(v0, v0 - center, new Vector2(1.0f*uvMult,1.0f*uvMult));
+		MeshNode n1 = new MeshNode(v1, v1 - center, new Vector2(2.0f*uvMult,1.0f*uvMult));
+		MeshNode n2 = new MeshNode(v2, v2 - center, new Vector2(1.0f*uvMult,2.0f*uvMult));
+		MeshNode n3 = new MeshNode(v3, v3 - center, new Vector2(2.0f*uvMult,2.0f*uvMult));
+		
+		//connect square
+		//0_____1
+		//|\    |
+		//| \   |
+		//|  \  |
+		//|   \ |
+		//|    \|
+		//2_____3
+		//
+
+		//border edges
+		n0.AddEdge(n1);
+		n0.AddEdge(n2);
+		
+		n1.AddEdge(n3);
+		n2.AddEdge(n3);
+
+		//cross edge
+		n0.AddEdge(n3);
+
+		//return v0 as center point
+		return n0;
+	}
+	
 	public static MeshNode generate_square(float x, float y, float z, float width, Axis axis, Vector3 center, float uvMult){
 		Vector3 v0, v1, v2, v3;
 		//center point
@@ -420,7 +452,6 @@ public class MeshGenerator
 	public static MeshNode generate_sphere(float x, float y, float z, float radius, int generations){
 		
 		//cube length
-		//TODO: check Math
 		float length = 2*radius / Mathf.Sqrt(3.0f);
 		Vector3 center = new Vector3(x,y,z);
 		//first generate cube;
@@ -477,27 +508,27 @@ public class MeshGenerator
 				new Vector3(x-0.5f*a0, y+0.5f*a1, z-0.5f*a2), 
 				new Vector3(x-0.5f*a0 - center.x, y+0.5f*a1 - center.y, z-0.5f*a2 - center.z),
 				new Vector2(0,1));
-		
+		  
 		MeshNode n3 = new MeshNode(
 				new Vector3(x+0.5f*a0, y+0.5f*a1, z-0.5f*a2), 
 				new Vector3(x+0.5f*a0 - center.x, y+0.5f*a1 - center.y, z-0.5f*a2 - center.z),
-				new Vector2(1,1));
+		  		new Vector2(1,1));
 		
 		MeshNode n4 = new MeshNode(
 				new Vector3(x-0.5f*a0, y-0.5f*a1, z+0.5f*a2), 
 				new Vector3(x-0.5f*a0 - center.x, y-0.5f*a1 - center.y, z+0.5f*a2 - center.z),
-				new Vector2(0,1));
+		  		new Vector2(0,1));
 		
 		MeshNode n5 = new MeshNode(
 				new Vector3(x+0.5f*a0, y-0.5f*a1, z+0.5f*a2), 
 				new Vector3(x+0.5f*a0 - center.x, y-0.5f*a1 - center.y, z+0.5f*a2 - center.z),
-				new Vector2(1,1));
+		  		new Vector2(1,1));
 		
 		MeshNode n6 = new MeshNode(
 				new Vector3(x-0.5f*a0, y+0.5f*a1, z+0.5f*a2), 
 				new Vector3(x-0.5f*a0 - center.x, y+0.5f*a1 - center.y, z+0.5f*a2 - center.z),
-				new Vector2(0,0));
-
+		  		new Vector2(0,0));
+	
 		MeshNode n7 = new MeshNode(
 				new Vector3(x+0.5f*a0, y+0.5f*a1, z+0.5f*a2), 
 				new Vector3(x+0.5f*a0 - center.x, y+0.5f*a1 - center.y, z+0.5f*a2 - center.z),

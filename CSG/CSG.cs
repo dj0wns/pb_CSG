@@ -28,6 +28,7 @@ namespace Parabox.CSG
 		Inner,
 		Outer,
 		On,
+		Compliment,
 		Union,
 		Intersect,
 		Subtract,
@@ -39,7 +40,7 @@ namespace Parabox.CSG
 		public CSG_Tree right;
 		private CSG_Operation operation;
 		private CSG_Node current_object;
-		
+		private Mesh m;	
 
 		//for leaf nodes
 		public CSG_Tree(GameObject obj){
@@ -52,8 +53,7 @@ namespace Parabox.CSG
 		
 		public CSG_Tree(Mesh m){
 			operation = CSG_Operation.no_op;
-			CSG_Model csg_model_a = new CSG_Model(m);
-			current_object = new CSG_Node( csg_model_a.ToPolygons());
+			this.m = m;
 			left = null;
 			right = null;
 		}
@@ -68,15 +68,67 @@ namespace Parabox.CSG
 
 		public Mesh getMesh(){
 			CSG_Model result = new CSG_Model(current_object.AllPolygons());
-			Debug.Log(result.vertices.Count);
 			return result.ToMesh();
 		}
 		public void render(){
 			current_object = render_tree();
-		} 
+		}
+		
+		public void clean(){
+			this.current_object = null;
+			if(left != null){
+				left.clean();
+			}
+			if(right != null){
+				right.clean();
+			}
+		}
+		
+		public void remove_references(){
+			this.current_object = null;
+			if(left != null){
+				left.remove_references();
+				left = null;
+			}	
+			if(right != null){
+				right.remove_references();
+				right = null;
+			}
+		}
+		
+
+
+		public void print(){
+			int[] i = new int[] {0};
+			print(i);
+		}
+
+
+		public void print(int[] i){
+			if(operation == CSG_Operation.no_op){
+				Debug.Log(i[0] + ": " + m.vertexCount);
+
+			} else {
+
+				Debug.Log(i[0] + ": " + operation);
+
+			}
+			if(left != null){
+				i[0]++;
+				left.print(i);
+			}
+			if(right != null){
+				i[0]++;
+				right.print(i);
+			}
+			
+		}
+	
 
 		internal CSG_Node render_tree(){
-			if(operation == CSG_Operation.no_op){
+			if(operation == CSG_Operation.no_op){	
+				CSG_Model csg_model_a = new CSG_Model(m);
+				current_object = new CSG_Node( csg_model_a.ToPolygons());
 				return current_object;
 			} else {
 				switch (operation){
@@ -90,6 +142,10 @@ namespace Parabox.CSG
 					
 					case CSG_Operation.On:
 						current_object = CSG_Node.On(left.render_tree());
+						return current_object;
+					
+					case CSG_Operation.Compliment:
+						current_object = CSG_Node.Compliment(left.render_tree());
 						return current_object;
 					
 					case CSG_Operation.Union:

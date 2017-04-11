@@ -18,6 +18,11 @@ public class region {
 
 }
 
+public struct SiloMaterial {
+	public string name;
+	public Color color;
+}
+
 public struct Type {
 	public string type;
 	public List<float> coefficients;
@@ -39,6 +44,9 @@ public struct SiloData {
 	public List<region> Regions;
 	public int nZones;
 	public List<int> Zones;
+	public int nMats;
+	public Dictionary<int, SiloMaterial> materials;
+	public List<int> matlist;
 }
 
 public class SiloReader
@@ -51,6 +59,8 @@ public class SiloReader
 		sd.Types = new List<Type>();
 		sd.Regions = new List<region>();
 		sd.Zones = new List<int>();
+		sd.materials = new Dictionary<int, SiloMaterial>();
+		sd.matlist = new List<int>();
 		//parse
 		sd.CSGName = reader.ReadLine();
 		sd.BlockNumber = Int32.Parse(reader.ReadLine());
@@ -76,65 +86,212 @@ public class SiloReader
 		for(int i = 0; i < sd.nZones; i++){
 			sd.Zones.Add(Int32.Parse(reader.ReadLine()));
 		}
+		sd.nMats = Int32.Parse(reader.ReadLine());
+		for(int i = 0; i < sd.nMats; i++){
+			String color;
+			float r, g, b, a = 1;
+			SiloMaterial mat = new SiloMaterial();
+			int index = Int32.Parse(reader.ReadLine());
+			mat.name = reader.ReadLine();
+			color = reader.ReadLine();
+			r = int.Parse(color.Substring(1,2), System.Globalization.NumberStyles.HexNumber);
+			g = int.Parse(color.Substring(3,2), System.Globalization.NumberStyles.HexNumber);
+			b = int.Parse(color.Substring(5,2), System.Globalization.NumberStyles.HexNumber);
+			mat.color = new Color(r/256.0f,g/256.0f,b/256.0f,a);
+			sd.materials.Add(index, mat);
+		}
+
+		for(int i = 0; i < sd.nZones; i++){
+			sd.matlist.Add(Int32.Parse(reader.ReadLine()));
+
+		}
+
 		reader.Close();
 		return sd;
 	}
 
 	public static List<CSG_Tree> GenerateTree(SiloData sd){
+		float infinite = 10000f ;
+		float scale = 0.01f;
+		int sphere_gen = 7;
+		int cylinder_gen = 5;
 		List<CSG_Tree> csgtree = new List<CSG_Tree>();
 		List<CSG_Tree> nodetree = new List<CSG_Tree>();
 		List<CSG_Tree> rendertree = new List<CSG_Tree>();
-		Debug.Log(sd.Types.Count);
 		//build nodes
 		for(int i =0 ; i < sd.Types.Count; i++){
 			switch(sd.Types[i].type.ToLower()){
 				case "quadric":
-					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					{
+						MeshGenerator.Axis axis;
+						float x, y, z, radius, length;
+						float a200 = sd.Types[i].coefficients[0];
+						float a020 = sd.Types[i].coefficients[1];
+						float a002 = sd.Types[i].coefficients[2];
+						float a110 = sd.Types[i].coefficients[3];
+						float a011 = sd.Types[i].coefficients[4];
+						float a101 = sd.Types[i].coefficients[5];
+						float a100 = sd.Types[i].coefficients[6];
+						float a010 = sd.Types[i].coefficients[7];
+						float a001 = sd.Types[i].coefficients[8];
+						float a000 = sd.Types[i].coefficients[9];
+						
+						//cases axis alligned cylinder
+						if(a110 == 0 && a011 == 0 && a101 == 0){
+							
+							if(a200 == 1 && a020 == 1 && a002 == 0){
+							//z axis cylinder
+								x = -a100/2.0f;
+								y = -a010/2.0f;
+								z = 0;
+								length = infinite;
+								radius = -(a000 - (x*x + y*y)) ;
+								axis = MeshGenerator.Axis.Z_AXIS;
+							
+							} else if(a200 == 1 && a020 == 0 && a002 == 1){
+							//y axis cylinder
+								x = -a100/2.0f;
+								y = 0;
+								z = -a010/2.0f;
+								length = infinite;
+								radius = -(a000 - (x*x + z*z));
+								axis = MeshGenerator.Axis.Y_AXIS;
+								
+							} else if(a200 == 0 && a020 == 1 && a002 == 1){
+							//x axis cylinder
+								x = 0;
+								y = -a010/2.0f;
+								z = -a010/2.0f;
+								length = infinite;
+								radius = -(a000 - (y*y + z*z)) ;
+								axis = MeshGenerator.Axis.X_AXIS;
+							
+							} else{
+								Debug.Log(sd.Types[i].type + " - Not Implemented");
+								break;
+							}
+
+							csgtree.Add(new CSG_Tree(
+									MeshGenerator.generate_axis_alligned_cylinder(
+										x * scale, y * scale, z * scale, 
+										Mathf.Sqrt(radius) * scale, length*scale,
+										axis, cylinder_gen).ToMesh()));
+
+						} else {
+							Debug.Log(sd.Types[i].type + " - Not Implemented");
+						}
+					}
 					break;
 				case "sphere":
 					{
-					//	GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        			//	sphere.transform.position = new Vector3(
-					//			sd.Types[i].coefficients[0],
-					//			sd.Types[i].coefficients[1],
-					//			sd.Types[i].coefficients[2]);
-
-					//	sphere.transform.localScale = new Vector3(
-					//			sd.Types[i].coefficients[3],
-					//			sd.Types[i].coefficients[3],
-					//			sd.Types[i].coefficients[3]);
-					//	csgtree.Add(new CSG_Tree(sphere));
-						//Destroy(sphere);
+						float x = sd.Types[i].coefficients[0]* scale; 
+						float y = sd.Types[i].coefficients[1]* scale; 
+						float z = sd.Types[i].coefficients[2]* scale;
+						float r = sd.Types[i].coefficients[3]* scale;
+						if(r > 10.0f){
+							Debug.Log("Exceeds Sphere Max");
+							csgtree.Add(new CSG_Tree(MeshGenerator.generate_sphere(
+										x,y,z,r*1.4f,0).ToMesh()));
+							break;
+						}
+						csgtree.Add(new CSG_Tree(MeshGenerator.generate_sphere(
+										x,y,z,r,sphere_gen).ToMesh()));
 					}
-					csgtree.Add(new CSG_Tree(MeshGenerator.generate_sphere(
-									sd.Types[i].coefficients[0], 
-									sd.Types[i].coefficients[1], 
-									sd.Types[i].coefficients[2],
-									sd.Types[i].coefficients[3],0).ToMesh()));
 					break;
 				case "ellipsoid":
 					Debug.Log(sd.Types[i].type + " - Not Implemented");
 					break;
 				case "plane_g":
-					Debug.Log(sd.Types[i].type + " - Not Implemented");
+					{
+						MeshGenerator.Axis axis;
+						float x = sd.Types[i].coefficients[0];
+						float y = sd.Types[i].coefficients[1];
+						float z = sd.Types[i].coefficients[2];
+						float c = sd.Types[i].coefficients[3];
+						Vector3 v0, v1, v2, v3;
+							v0 = new Vector3(0,0,0);
+							v1 = new Vector3(0,0,0);
+							v2 = new Vector3(0,0,0);
+							v3 = new Vector3(0,0,0);
+						if(x == 0 && y == 0){
+							//z axis plane
+							v0 = new Vector3(-infinite/2.0f, -infinite/2.0f, -c*z);
+							v1 = new Vector3(-infinite/2.0f, infinite/2.0f, -c*z);
+							v2 = new Vector3(infinite/2.0f, -infinite/2.0f, -c*z);
+							v3 = new Vector3(infinite/2.0f, infinite/2.0f, -c*z);
+						} else if(x == 0 && z == 0){
+							//y axis plane
+							v0 = new Vector3(-infinite/2.0f, -c*y,-infinite/2.0f);
+							v1 = new Vector3(-infinite/2.0f, -c*y, infinite/2.0f);
+							v2 = new Vector3(infinite/2.0f, -c*y,-infinite/2.0f);
+							v3 = new Vector3(infinite/2.0f, -c*y, infinite/2.0f);
+						} else if(y == 0 && z == 0){
+							//x axis plane
+							v0 = new Vector3(-c*x,-infinite/2.0f, -infinite/2.0f);
+							v1 = new Vector3(-c*x,-infinite/2.0f, infinite/2.0f);
+							v2 = new Vector3(-c*x,infinite/2.0f, -infinite/2.0f);
+							v3 = new Vector3(-c*x,infinite/2.0f, infinite/2.0f);
+						} else if(x == 0){
+							//yz plane
+							v0 = new Vector3(-infinite/2.0f, infinite/2.0f, 
+									(c - infinite/2.0f * y)/z);
+							v1 = new Vector3(infinite/2.0f, infinite/2.0f, 
+									(c - infinite/2.0f * y)/z);
+							v2 = new Vector3(-infinite/2.0f, -infinite/2.0f, 
+									(c + infinite/2.0f * y)/z);
+							v3 = new Vector3(infinite/2.0f, -infinite/2.0f, 
+									(c + infinite/2.0f * y)/z);
+						} else if(y == 0){
+							//xz plane
+							v0 = new Vector3(infinite/2.0f, -infinite/2.0f, 
+									(c - infinite/2.0f * x)/y);
+							v1 = new Vector3(infinite/2.0f, infinite/2.0f, 
+									(c - infinite/2.0f * x)/y);
+							v2 = new Vector3(-infinite/2.0f, -infinite/2.0f, 
+									(c + infinite/2.0f * x)/y);
+							v3 = new Vector3(-infinite/2.0f, infinite/2.0f, 
+									(c + infinite/2.0f * x)/y);
+						} else if(z == 0){
+							//xy plane
+							v0 = new Vector3(infinite/2.0f, (c - infinite/2.0f * z)/x, 
+									-infinite/2.0f);
+							v1 = new Vector3(infinite/2.0f, (c - infinite/2.0f * z)/x, 
+									infinite/2.0f);
+							v2 = new Vector3(-infinite/2.0f, (c - infinite/2.0f * z)/x, 
+									-infinite/2.0f);
+							v3 = new Vector3(-infinite/2.0f, (c - infinite/2.0f * z)/x, 
+									infinite/2.0f);
+						} else {
+							Debug.Log(sd.Types[i].type + " - Not Implemented");
+							//xyz plane
+
+						}
+						csgtree.Add(new CSG_Tree(MeshGenerator.generate_arbitrary_quad(
+								v0 * scale, v1 * scale, v2 * scale, v3 * scale, 
+								new Vector3((c-1)*x,(c-1)*y,(c-1)*z) * scale, 1).ToMesh())); 
+
+					}
 					break;
 				case "plane_x":
 					csgtree.Add(new CSG_Tree(MeshGenerator.generate_square(
-									sd.Types[i].coefficients[0], 
-									0, 0, 100, MeshGenerator.Axis.X_AXIS, 
-									new Vector3(0,0,0), 1).ToMesh())); 
+									sd.Types[i].coefficients[0]* scale, 
+									0, 0, infinite*scale, MeshGenerator.Axis.X_AXIS, 
+									new Vector3(sd.Types[i].coefficients[0]* scale - 1.0f,0,0)
+									, 1).ToMesh())); 
 					break;
 				case "plane_y":
 					csgtree.Add(new CSG_Tree(MeshGenerator.generate_square(
-									0, sd.Types[i].coefficients[0], 
-									0, 100, MeshGenerator.Axis.Y_AXIS, 
-									new Vector3(0,0,0), 1).ToMesh())); 
+									0, sd.Types[i].coefficients[0]* scale, 
+									0, infinite*scale, MeshGenerator.Axis.Y_AXIS, 
+									new Vector3(0, sd.Types[i].coefficients[0]* scale - 1.0f,0),
+									1).ToMesh())); 
 					break;
 				case "plane_z":
 					csgtree.Add(new CSG_Tree(MeshGenerator.generate_square(
-									0, 0,sd.Types[i].coefficients[0], 
-									100, MeshGenerator.Axis.Z_AXIS, 
-									new Vector3(0,0,0), 1).ToMesh())); 
+									0, 0,sd.Types[i].coefficients[0]* scale, 
+									infinite*scale, MeshGenerator.Axis.Z_AXIS, 
+									new Vector3(0,0,sd.Types[i].coefficients[0]* scale - 1.0f),
+									1).ToMesh())); 
 					break;
 				case "plane_pn":
 					Debug.Log(sd.Types[i].type + " - Not Implemented");
@@ -145,24 +302,37 @@ public class SiloReader
 				case "cylinder_pnlr":
 					{
 						MeshGenerator.Axis axis;
+						float x, y, z;
+						float length, radius;
+						length = sd.Types[i].coefficients[6];
+						radius = sd.Types[i].coefficients[7];
 						//TODO : Assumes cylinder is axis aligned, will fail if not
 						if(sd.Types[i].coefficients[3] != 0){	
 							axis = MeshGenerator.Axis.X_AXIS;
+							x = sd.Types[i].coefficients[0] + 0.5f*length;
+							y = sd.Types[i].coefficients[1];
+							z = sd.Types[i].coefficients[2];
 						} else if(sd.Types[i].coefficients[4] != 0){
 							axis = MeshGenerator.Axis.Y_AXIS;
+							x = sd.Types[i].coefficients[0];
+							y = sd.Types[i].coefficients[1] + 0.5f*length;
+							z = sd.Types[i].coefficients[2];
 						} else if(sd.Types[i].coefficients[5] != 0){
 							axis = MeshGenerator.Axis.Z_AXIS;
+							x = sd.Types[i].coefficients[0];
+							y = sd.Types[i].coefficients[1] + 0.5f*length;
+							z = sd.Types[i].coefficients[2];
 						} else {
 							axis = MeshGenerator.Axis.X_AXIS;
+							x = sd.Types[i].coefficients[0] + 0.5f*length;
+							y = sd.Types[i].coefficients[1];
+							z = sd.Types[i].coefficients[2];
 						}
 						csgtree.Add(new CSG_Tree(
 									MeshGenerator.generate_axis_alligned_cylinder(
-										sd.Types[i].coefficients[0],
-										sd.Types[i].coefficients[1],
-										sd.Types[i].coefficients[2],
-										sd.Types[i].coefficients[7],
-										sd.Types[i].coefficients[6],
-										axis, 2).ToMesh()));
+										x* scale, y* scale, z* scale, 
+										radius* scale, length* scale,
+										axis, cylinder_gen).ToMesh()));
 
 					}
 					break;
@@ -198,7 +368,6 @@ public class SiloReader
 
 		}
 		//construct tree
-		Debug.Log(csgtree.Count);
 		for(int i = 0 ; i < sd.Regions.Count; i++){
 				switch(sd.Regions[i].typeflag.ToLower()){
 					case "inner":
@@ -235,7 +404,10 @@ public class SiloReader
 								CSG_Operation.Subtract));
 						break;
 					case "compliment":
-						Debug.Log(sd.Regions[i].typeflag + " - Not Implemented");
+						nodetree.Add(new CSG_Tree(
+								nodetree[sd.Regions[i].leftID], 
+								nodetree[sd.Regions[i].leftID], 
+								CSG_Operation.Compliment));
 						break;
 					case "xform":
 						Debug.Log(sd.Regions[i].typeflag + " - Not Implemented");
@@ -246,7 +418,6 @@ public class SiloReader
 				}
 		}
 		//extract render objects
-		Debug.Log(nodetree.Count);
 		for(int i = 0; i < sd.Zones.Count; i++){
 			rendertree.Add(nodetree[sd.Zones[i]]);
 		}
@@ -320,7 +491,7 @@ public class SiloReader
 				break;
 		}
 		for(int i = 0; i < coeffcount; i++){
-			t.coefficients.Add(Single.Parse(reader.ReadLine()));
+			t.coefficients.Add(Convert.ToSingle(Double.Parse(reader.ReadLine())));
 		}
 		return t;
 

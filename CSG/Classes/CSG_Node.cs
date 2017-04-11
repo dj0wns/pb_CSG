@@ -26,7 +26,6 @@ namespace Parabox.CSG
 			// this.front = null;
 			// this.back = null;
 		}
-
 		public CSG_Node(List<CSG_Polygon> list, CSG_Plane plane, CSG_Node front, CSG_Node back)
 		{
 			this.polygons = list;
@@ -35,6 +34,7 @@ namespace Parabox.CSG
 			this.back = back;
 		}
 
+		//changed to a deep copy
 		public CSG_Node Clone()
 		{
 			CSG_Node clone = new CSG_Node(this.polygons, this.plane, this.front, this.back);
@@ -208,6 +208,14 @@ namespace Parabox.CSG
 		public static CSG_Node On(CSG_Node a1)
 		{
 			return a1.Clone();
+		}
+		
+		// TODO : I think this is what this means
+		public static CSG_Node Compliment(CSG_Node a1)
+		{
+			CSG_Node a = a1.Clone();
+			a.Invert();
+			return a;
 		}
 
 		// Return a new CSG solid representing space in either this solid or in the
