@@ -8,7 +8,7 @@ using System.Linq;
 /**
  * Simple demo of CSG operations.
  */
-public class Demo : MonoBehaviour
+public class pb_CSG_Demo : MonoBehaviour
 {
 	GameObject composite, composite_normal,  temp;
 	bool wireframe = false;
