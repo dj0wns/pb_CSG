@@ -30,53 +30,29 @@ public class Demo : MonoBehaviour
 	{
 		objects = new List<GameObject>();
 
-		Silo_Test();
-		//Mesh_Generator_Test();
-		//CSG_Tree_Test();
+		Mesh_Generator_Test();
+		CSG_Tree_Test();
 		
 	}
 	
-	void Silo_Test(){
-		SiloData sd = SiloReader.ReadFile("Assets/pb_CSG/Demo Assets/DATA/csg.fake");
-	//	SiloReader.PrintStructure(sd);
-		List<CSG_Tree> csgtree = SiloReader.GenerateTree(sd);
-		for(int i = 0; i < csgtree.Count; i++){
-			try{
-				csgtree[i].render();
-
-				//create new game object from result
-  				composite= new GameObject();
-  				composite.transform.position = origin;
-				composite.AddComponent<MeshFilter>().sharedMesh = csgtree[i].getMesh();
-	  			composite.AddComponent<MeshRenderer>().material = genericMaterial;
-				composite.GetComponent<MeshRenderer>().material.color = sd.materials[sd.matlist[i]].color;
-			
-				objects.Add(composite);
-			} catch(Exception e) {
-				Debug.Log(e);
-			}
-			csgtree[i].remove_references();
-		}
-
-	}
 
 	void Mesh_Generator_Test(){
 		Color color = new Color(0.484f, 0.984f, 0.0f, 1);
-//		composite= new GameObject();
-//		composite.transform.position = origin;
-//		composite.AddComponent<MeshRenderer>().material = wireframeMaterial_blue;
-//		composite.AddComponent<MeshFilter>().sharedMesh = 
-//			MeshGenerator.generate_cube(origin.x+12, origin.y, origin.z, 
-//				1.4f, 1.4f, 1.4f).ToMesh();
-//		
-//		objects.Add(composite);
+		composite= new GameObject();
+		composite.transform.position = origin;
+		composite.AddComponent<MeshRenderer>().material = wireframeMaterial_blue;
+		composite.AddComponent<MeshFilter>().sharedMesh = 
+			MeshGenerator.generate_cube(origin.x+12, origin.y, origin.z, 
+				1.4f, 1.4f, 1.4f).ToMesh();
 		
-//		composite= new GameObject();
-//		composite.transform.position = origin;
-//		composite.AddComponent<MeshRenderer>().material = wireframeMaterial_blue;
-//		composite.AddComponent<MeshFilter>().sharedMesh = 
-//		MeshGenerator.generate_sphere(origin.x+8, origin.y, origin.z, 1f, 10).ToMesh();
-//		objects.Add(composite);
+		objects.Add(composite);
+  	
+		composite= new GameObject();
+		composite.transform.position = origin;
+		composite.AddComponent<MeshRenderer>().material = wireframeMaterial_blue;
+		composite.AddComponent<MeshFilter>().sharedMesh = 
+		MeshGenerator.generate_sphere(origin.x+8, origin.y, origin.z, 1f, 10).ToMesh();
+		objects.Add(composite);
 
 	  	composite = new GameObject();
 	  	composite.transform.position = origin;
@@ -87,14 +63,14 @@ public class Demo : MonoBehaviour
 	  
 	 	objects.Add(composite);
 	  
-//		composite = new GameObject();
-//		composite.transform.position = origin;
-//		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_blue;
-//		composite.AddComponent<MeshFilter>().sharedMesh = 
-//		MeshGenerator.generate_axis_alligned_cone(origin.x, origin.y, origin.z, 
-//				0.8f, 2.0f, MeshGenerator.Axis.Y_AXIS,  3).ToMesh();
-//		
-//		objects.Add(composite);
+		composite = new GameObject();
+		composite.transform.position = origin;
+		composite.AddComponent<MeshRenderer>().sharedMaterial = wireframeMaterial_blue;
+		composite.AddComponent<MeshFilter>().sharedMesh = 
+		MeshGenerator.generate_axis_alligned_cone(origin.x, origin.y, origin.z, 
+				0.8f, 2.0f, MeshGenerator.Axis.Y_AXIS,  3).ToMesh();
+		
+		objects.Add(composite);
 
 	}
 	
